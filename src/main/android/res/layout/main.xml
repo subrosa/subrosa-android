@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<GridLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:rowCount="10"
+    android:columnCount="2">
+
+    <EditText
+            android:id="@+id/input"
+            android:text=""
+            android:inputType="number"
+            android:layout_width="40dp"
+            android:layout_height="wrap_content"
+            android:maxWidth="0dip"
+            android:layout_gravity="center"
+            />
+    <Button
+            android:layout_width="183dp"
+            android:layout_height="wrap_content"
+            android:text="@string/update"
+            android:id="@+id/button"
+            android:onClick="updateGame"
+            />
+    <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/greeting"
+            android:id="@+id/message"
+            android:layout_columnSpan="2"
+            />
+    <Button
+            android:layout_width="183dp"
+            android:layout_height="wrap_content"
+            android:text="@string/create"
+            android:id="@+id/createButton"
+            android:layout_row="4"
+            android:layout_column="1"
+            android:onClick="createGame"
+            />
+    <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/createdGame"
+            android:layout_columnSpan="2"
+            />
+</GridLayout>
+

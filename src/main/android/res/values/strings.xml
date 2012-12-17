@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Subrosa Games</string>
+    <string name="name_prompt">Enter your name so I can greet you</string>
+    <string name="name_default">Peter Frampton</string>
+    <string name="greeting">Hello, %1$s</string>
+    <string name="update">update</string>
+    <string name="title_activity_update_greeting">update greeting</string>
+    <string name="create">create game</string>
+</resources>
