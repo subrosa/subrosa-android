@@ -23,16 +23,20 @@
 
     <application
             android:name="SubrosaApplication"
-            android:label="@string/app_name"
+            android:label="@string/appname"
             android:icon="@drawable/icon">
         <activity
-                android:name="EntranceActivity"
-                android:label="@string/app_name">
+                android:name=".home.HomeActivity"
+                android:label="@string/appname">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+
+        <activity android:name=".target.ViewTargetActivity"/>
+        <activity android:name=".settings.SettingsActivity"/>
+        <activity android:name=".authentication.AuthenticationActivity"/>
 
         <receiver android:name="com.google.android.gcm.GCMBroadcastReceiver" android:permission="com.google.android.c2dm.permission.SEND" >
             <intent-filter>

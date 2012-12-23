@@ -1,17 +1,20 @@
 package com.subrosagames.subrosa.mobile.android;
 
-import android.app.Notification;
-import android.app.NotificationManager;
-import android.content.Context;
-import android.content.Intent;
-import android.os.AsyncTask;
-import android.support.v4.app.NotificationCompat;
-import android.util.Log;
-import com.google.android.gcm.GCMBaseIntentService;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
-
-import java.net.URL;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.os.AsyncTask;
+import android.preference.PreferenceManager;
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.TaskStackBuilder;
+import android.util.Log;
+import com.google.android.gcm.GCMBaseIntentService;
+import com.subrosagames.subrosa.mobile.android.settings.SettingsFragment;
+import com.subrosagames.subrosa.mobile.android.target.ViewTargetActivity;
 
 /**
  *
@@ -22,21 +25,24 @@ public class GCMIntentService extends GCMBaseIntentService {
 
     @Override
     protected void onMessage(Context context, Intent intent) {
-        Log.d(TAG, "I just got a message! Let's do something with it");
-        Log.d(TAG, intent.getAction());
-        Log.d(TAG, intent.getStringExtra("title"));
-        Log.d(TAG, intent.getStringExtra("text"));
+        Log.d(TAG, "Received notification: " + intent.getStringExtra("code"));
+
+        Intent resultIntent = new Intent(this, ViewTargetActivity.class);
+        TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
+        stackBuilder.addParentStack(ViewTargetActivity.class);
+        stackBuilder.addNextIntent(resultIntent);
+        PendingIntent resultPendingIntent = stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this)
                 .setSmallIcon(R.drawable.icon)
                 .setContentTitle(intent.getStringExtra("title"))
-                .setContentText(intent.getStringExtra("text"));
+                .setContentText(intent.getStringExtra("text"))
+                .setAutoCancel(true)
+                .setContentIntent(resultPendingIntent);
 
         NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         int messageId = 0;
         notificationManager.notify(messageId, builder.build());
-
-
     }
 
     @Override
@@ -57,9 +63,12 @@ public class GCMIntentService extends GCMBaseIntentService {
         // Send registrationId to server so it can be unregistered
     }
 
-    private class RegisterDeviceTask extends AsyncTask<Void, Void, Void> {
+    private String getApiServerPreference() {
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        return sharedPreferences.getString(SettingsFragment.KEY_PREF_API_SERVER, "http://localhost");
+    }
 
-        private static final String REGISTRATION_URL = "http://eng-dhcp-114.rdu.lulu.com:8080/subrosa-api/v1/android/register/";
+    private class RegisterDeviceTask extends AsyncTask<Void, Void, Void> {
 
         private String registrationId;
 
@@ -69,7 +78,9 @@ public class GCMIntentService extends GCMBaseIntentService {
 
         @Override
         protected Void doInBackground(Void... voids) {
-            String url = REGISTRATION_URL + registrationId;
+
+            String url = getApiServerPreference() + "/subrosa-api/v1/android/register/" + registrationId;
+            Log.d(TAG, "Registering device using url " + url);
             RestTemplate restTemplate = new RestTemplate(true);
             try {
                 restTemplate.postForObject(url, null, String.class);
