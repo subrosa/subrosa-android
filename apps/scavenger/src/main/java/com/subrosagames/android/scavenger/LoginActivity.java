@@ -15,6 +15,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -25,11 +26,20 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import com.facebook.Session;
+import com.facebook.SessionState;
+import com.facebook.UiLifecycleHelper;
+import com.facebook.model.GraphUser;
+import com.facebook.widget.LoginButton;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.common.SignInButton;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 
@@ -43,6 +53,8 @@ import java.util.List;
  */
 public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>, GoogleAuthHelper.OnGoogleAuthListener {
 
+    private static final Logger LOG = LoggerFactory.getLogger(LoginActivity.class);
+
     /**
      * A dummy authentication store containing known user names and passwords.
      * TODO: remove after connecting to a real authentication system.
@@ -50,6 +62,9 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>, 
     private static final String[] DUMMY_CREDENTIALS = new String[]{
             "foo@example.com:hello", "bar@example.com:world"
     };
+
+    public static final List<String> REQUIRED_FACEBOOK_PERMISSIONS = Arrays.asList("email", "user_birthday", "user_location", "public_profile");
+
     /**
      * Keep track of the login task to ensure we can cancel it if requested.
      */
@@ -67,6 +82,8 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>, 
     private SignInButton plusSignInButton;
     private View mSignOutButtons;
     private View mLoginFormView;
+    private LoginButton fbLoginButton;
+    private UiLifecycleHelper uiHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -120,12 +137,71 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>, 
         mProgressView = findViewById(R.id.login_progress);
         mEmailLoginFormView = findViewById(R.id.email_login_form);
         mSignOutButtons = findViewById(R.id.plus_sign_out_buttons);
+
+        fbLoginButton = (LoginButton) findViewById(R.id.fb_login_button);
+        fbLoginButton.setReadPermissions(REQUIRED_FACEBOOK_PERMISSIONS);
+        fbLoginButton.setUserInfoChangedCallback(new LoginButton.UserInfoChangedCallback() {
+            @Override
+            public void onUserInfoFetched(GraphUser user) {
+                handleFacebookAction(user);
+            }
+        });
+
+        Session.StatusCallback callback = new Session.StatusCallback() {
+            @Override
+            public void call(Session session, SessionState state, Exception exception) {
+                onSessionStateChange(session, state, exception);
+            }
+        };
+        uiHelper = new UiLifecycleHelper(this, callback);
+        uiHelper.onCreate(savedInstanceState);
+    }
+
+    private void onSessionStateChange(Session session, SessionState state, Exception exception) {
+        LOG.debug("Handling FB on session state changed");
+    }
+
+    private void handleFacebookAction(GraphUser user) {
+        LOG.debug("Handling FB user info fetched: {}", user);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        // For scenarios where the main activity is launched and user
+        // session is not null, the session state change notification
+        // may not be triggered. Trigger it if it's open/closed.
+        Session session = Session.getActiveSession();
+        if (session != null &&
+                (session.isOpened() || session.isClosed()) ) {
+            onSessionStateChange(session, session.getState(), null);
+        }
+        uiHelper.onResume();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        uiHelper.onPause();
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        uiHelper.onDestroy();
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        uiHelper.onSaveInstanceState(outState);
     }
 
     @Override
     protected void onActivityResult(int requestCode, int responseCode, Intent intent) {
         super.onActivityResult(requestCode, responseCode, intent);
         googleAuthHelper.onActivityResult(requestCode, responseCode, intent);
+        uiHelper.onActivityResult(requestCode, responseCode, intent);
     }
 
 //    @Override

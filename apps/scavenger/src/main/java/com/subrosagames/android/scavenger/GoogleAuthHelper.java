@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.os.Bundle;
+import android.util.Log;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -11,10 +12,15 @@ import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.plus.Plus;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * A base class to wrap communication with the Google Play Services PlusClient.
  */
 public class GoogleAuthHelper implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
+
+    private static final Logger LOG = LoggerFactory.getLogger(GoogleAuthHelper.class);
 
     // A magic number we will use to know that our sign-in error resolution activity has completed
     private static final int RC_SIGN_IN = 298583;
@@ -81,12 +87,14 @@ public class GoogleAuthHelper implements GoogleApiClient.ConnectionCallbacks, Go
 
     @Override
     public void onConnectionFailed(ConnectionResult connectionResult) {
+        LOG.debug("onConnectionFailed (intentInProgress, hasResolution): ({}, {})", intentInProgress, connectionResult.hasResolution());
         if (!intentInProgress && connectionResult.hasResolution()) {
             try {
                 intentInProgress = true;
                 activity.startIntentSenderForResult(connectionResult.getResolution().getIntentSender(),
                         RC_SIGN_IN, null, 0, 0, 0);
             } catch (IntentSender.SendIntentException e) {
+                LOG.debug("Intent cancelled, reattempting connection", e);
                 // The intent was canceled before it was sent.  Return to the default
                 // state and attempt to connect to get an updated ConnectionResult.
                 intentInProgress = false;
@@ -121,7 +129,9 @@ public class GoogleAuthHelper implements GoogleApiClient.ConnectionCallbacks, Go
             // different account from the account chooser.
             // Disconnect from Google Play Services, then reconnect in order to restart the
             // process from scratch.
-            apiClient.clearDefaultAccountAndReconnect();
+            Plus.AccountApi.clearDefaultAccount(apiClient);
+            apiClient.disconnect();
+            apiClient.connect();
         }
     }
 
@@ -140,6 +150,7 @@ public class GoogleAuthHelper implements GoogleApiClient.ConnectionCallbacks, Go
     }
 
     private void startResolution() {
+        LOG.debug("startResolution");
         try {
             // If we can resolve the error, then call start resolution and pass it an integer tag
             // we can use to track.

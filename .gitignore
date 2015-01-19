@@ -2,3 +2,6 @@ build/
 keystore/
 local.properties
 *.iml
+/**/*.iml
+.idea/
+.gradle/

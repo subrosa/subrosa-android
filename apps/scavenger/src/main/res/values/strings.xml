@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Scavenger</string>
+    <string name="title_fb_login">Sign In</string>
 </resources>

@@ -40,6 +40,17 @@
 
             </LinearLayout>
 
+            <com.facebook.widget.LoginButton
+                android:id="@+id/fb_login_button"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginBottom="30dp"
+                facebook:logout_text="Log out of Facebook"
+                facebook:confirm_logout="true"
+                facebook:fetch_user_info="true"
+                />
+
             <LinearLayout android:id="@+id/email_login_form" android:layout_width="match_parent"
                 android:layout_height="wrap_content" android:orientation="vertical">
 
