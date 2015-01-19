@@ -1,0 +1,4 @@
+include ':libs:commons'
+include ':libs:facebook-android-sdk-3.22.0:facebook'
+include ':apps:scavenger'
+
